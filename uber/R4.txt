@@ -1,0 +1,80 @@
+Designing Order Status Management
+Designing order status management for an e-retail system like Amazon involves several key considerations:
+
+Status Lifecycle: Define the different stages an order goes through (e.g., placed, confirmed, shipped, delivered, canceled).
+
+Data Model: Design a schema to track order status changes. This might involve a relational database with tables like Orders, OrderStatus, and OrderStatusHistory.
+
+Event Handling: Implement mechanisms to handle status updates triggered by events (e.g., order placement, shipping confirmation). Consider event-driven architecture using message queues or event streams.
+
+Scalability: Ensure the system can handle a high volume of orders and status updates efficiently. Use distributed systems if necessary.
+
+Visibility and Monitoring: Provide dashboards or APIs for stakeholders to track order statuses in real-time.
+
+Error Handling and Resilience: Plan for scenarios like system failures or order processing errors and implement appropriate error handling and retry mechanisms.
+
+
+
+Summarizing Event Log Data Using SQL
+Assuming you have an event log table (event_logs) with columns user_id, event_type, and timestamp, here's how you can write SQL queries to summarize the data:
+
+Step 1: Calculate Time Differences Between Events
+First, calculate the time differences (time_diff) between consecutive events of the same type for each user.
+
+sql
+Copy code
+WITH OrderedEvents AS (
+    SELECT
+        user_id,
+        event_type,
+        timestamp,
+        LAG(timestamp) OVER (PARTITION BY user_id, event_type ORDER BY timestamp) AS prev_timestamp
+    FROM event_logs
+)
+SELECT
+    user_id,
+    event_type,
+    timestamp,
+    COALESCE(TIMESTAMP_DIFF(timestamp, prev_timestamp, SECOND), 0) AS time_diff
+FROM OrderedEvents;
+Explanation:
+
+LAG(timestamp) OVER (PARTITION BY user_id, event_type ORDER BY timestamp): Uses the LAG window function to fetch the previous timestamp for each user and event type combination.
+COALESCE(TIMESTAMP_DIFF(timestamp, prev_timestamp, SECOND), 0): Calculates the difference in seconds (TIMESTAMP_DIFF) between the current timestamp and the previous timestamp. Uses COALESCE to handle the first event for each user and event type where prev_timestamp is null.
+Step 2: Summarize Daily Report
+Next, summarize the total time spent on each event type for the day.
+
+sql
+Copy code
+WITH EventDurations AS (
+    SELECT
+        user_id,
+        event_type,
+        SUM(COALESCE(TIMESTAMP_DIFF(timestamp, prev_timestamp, SECOND), 0)) AS total_time_spent
+    FROM (
+        SELECT
+            user_id,
+            event_type,
+            timestamp,
+            LAG(timestamp) OVER (PARTITION BY user_id, event_type ORDER BY timestamp) AS prev_timestamp
+        FROM event_logs
+    ) OrderedEvents
+    GROUP BY user_id, event_type
+)
+SELECT
+    event_type,
+    SUM(total_time_spent) AS total_time_spent_today
+FROM EventDurations
+GROUP BY event_type;
+Explanation:
+
+EventDurations CTE (Common Table Expression): Computes the total time spent (total_time_spent) on each event type (event_type) for each user (user_id) by summing up the time_diff calculated in the previous step.
+The outer query then aggregates (SUM) the total time spent on each event_type across all users to get the daily report.
+Example Usage
+Assuming your event_logs table has data like:
+
+user_id	event_type	timestamp
+user1	ordered	2024-10-15 08:00:00
+user2	ordered	2024-10-15 09:00:00
+user1	ordered	2024-10-15 10:00:00
+Running the above SQL queries on this data would give you the summarized total time spent on each event type for the day.

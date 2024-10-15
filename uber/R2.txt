@@ -1,0 +1,60 @@
+Designing a CCD (Conformed Dimensions) Type System
+A CCD type system (Conformed Dimensions) typically involves centralizing dimensions (dims) that are standardized across different facts (facts tables). Here’s a conceptual design:
+
+Facts Table
+Orders Fact Table: Central table capturing order-related metrics and measures.
+Dimension Tables (Dims)
+Time Dimension:
+
+Attributes: date_id (primary key), full_date, day_of_week, month, quarter, year.
+Used for time-based analysis and aggregation.
+Product Dimension:
+
+Attributes: product_id (primary key), product_name, category, brand, description.
+Describes products ordered.
+Customer Dimension:
+
+Attributes: customer_id (primary key), customer_name, email, phone, location.
+Contains customer details.
+Location Dimension:
+
+Attributes: location_id (primary key), city, state, country, zipcode.
+Describes delivery locations.
+Payment Method Dimension:
+
+Attributes: payment_method_id (primary key), payment_method_type, payment_method_description.
+Details payment methods used.
+SQL Questions
+1. SQL Question on Percentile Calculation
+Problem: Calculate the 90th percentile of order amounts for each product category.
+
+sql
+Copy code
+WITH Percentiles AS (
+    SELECT
+        product_category,
+        PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY order_amount) OVER (PARTITION BY product_category) AS ninetieth_percentile
+    FROM orders
+    JOIN products ON orders.product_id = products.product_id
+    GROUP BY product_category, order_amount
+)
+SELECT DISTINCT
+    product_category,
+    ninetieth_percentile
+FROM Percentiles;
+Explanation: This SQL query calculates the 90th percentile (PERCENTILE_CONT) of order_amount for each product_category. It uses window functions to partition the data by product_category.
+
+2. SQL Question on Weekly Summarization of Orders
+Problem: Summarize weekly order totals, average order amounts, and count of orders for each week.
+
+sql
+Copy code
+SELECT
+    DATE_TRUNC('week', order_date) AS week_start_date,
+    SUM(order_amount) AS total_order_amount,
+    AVG(order_amount) AS avg_order_amount,
+    COUNT(*) AS order_count
+FROM orders
+GROUP BY DATE_TRUNC('week', order_date)
+ORDER BY week_start_date;
+Explanation: This SQL query summarizes weekly order metrics (total_order_amount, avg_order_amount, order_count) by truncating order_date to the start of each week (DATE_TRUNC('week', order_date)). It aggregates data using SUM, AVG, and COUNT functions grouped by the weekly start date.
