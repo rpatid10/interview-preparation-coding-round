@@ -1,8 +1,6 @@
 SQL Question
 Problem: Calculate the 90th percentile of order amounts for each product category, and filter results where the 90th percentile is greater than a specified threshold.
 
-sql
-Copy code
 WITH Percentiles AS (
     SELECT
         product_category,
@@ -21,8 +19,6 @@ Explanation: This SQL query calculates the 90th percentile (PERCENTILE_CONT) of 
 Python Question
 Problem: Move all zeroes in an array to the right while maintaining the order of non-zero elements.
 
-python
-Copy code
 def move_zeroes(nums):
     non_zero_index = 0
     
