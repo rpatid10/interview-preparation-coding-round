@@ -21,8 +21,6 @@ Assuming you have an event log table (event_logs) with columns user_id, event_ty
 Step 1: Calculate Time Differences Between Events
 First, calculate the time differences (time_diff) between consecutive events of the same type for each user.
 
-sql
-Copy code
 WITH OrderedEvents AS (
     SELECT
         user_id,
@@ -44,8 +42,6 @@ COALESCE(TIMESTAMP_DIFF(timestamp, prev_timestamp, SECOND), 0): Calculates the d
 Step 2: Summarize Daily Report
 Next, summarize the total time spent on each event type for the day.
 
-sql
-Copy code
 WITH EventDurations AS (
     SELECT
         user_id,
