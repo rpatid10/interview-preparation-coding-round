@@ -28,8 +28,7 @@ SQL Questions
 1. SQL Question on Percentile Calculation
 Problem: Calculate the 90th percentile of order amounts for each product category.
 
-sql
-Copy code
+
 WITH Percentiles AS (
     SELECT
         product_category,
@@ -47,8 +46,6 @@ Explanation: This SQL query calculates the 90th percentile (PERCENTILE_CONT) of 
 2. SQL Question on Weekly Summarization of Orders
 Problem: Summarize weekly order totals, average order amounts, and count of orders for each week.
 
-sql
-Copy code
 SELECT
     DATE_TRUNC('week', order_date) AS week_start_date,
     SUM(order_amount) AS total_order_amount,
